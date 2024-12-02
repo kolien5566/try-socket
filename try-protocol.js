@@ -26,6 +26,6 @@ console.log('解析的JSON数据:', messageGet.data);
 
 // 测试发送数据构建
 let messageSendHeader = hexStringToBuffer('01 01 03');
-let messageSendJson = {"SN":"20010TP2C3W00025"};
+let messageSendJson = { SN: '20010TP2C3W00025' };
 const bufferSend = Protocol.constructMessage(messageSendHeader, messageSendJson);
 console.log('构建的数据包(HEX):', bufferToHexString(bufferSend));

@@ -10,9 +10,6 @@ const io = new Server(webServer.getHttpServer());
 const deviceManager = new DeviceManager(io);
 const tcpServer = new TcpServer(deviceManager);
 
-// 设置路由
-webServer.setupRoutes(deviceManager);
-
 // 启动服务器
 webServer.start(3000);
 tcpServer.start(8080);
