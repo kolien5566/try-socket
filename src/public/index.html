@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PCS EMS</title>
+    <link rel="stylesheet" href="https://unpkg.com/element-plus/dist/index.css">
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+    <div id="app"></div>
+    
+    <!-- 引入依赖 -->
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    <script src="https://unpkg.com/element-plus"></script>
+    <script src="/socket.io/socket.io.js"></script>
+    
+    <!-- 使用type="module"引入主应用 -->
+    <script type="module">
+        import { App } from '/js/components/App.js';
+        import { socket } from '/js/utils/socket.js';
+
+        const { createApp } = Vue;
+        const app = createApp(App);
+        app.config.globalProperties.$socket = socket;
+        app.use(ElementPlus);
+        app.mount('#app');
+    </script>
+</body>
+</html>

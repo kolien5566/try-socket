@@ -1,0 +1,20 @@
+.device-container {
+    padding: 20px;
+}
+
+.status-online {
+    color: #67C23A;
+}
+
+.status-offline {
+    color: #F56C6C;
+}
+
+.device-card {
+    margin-bottom: 20px;
+}
+
+.config-panel {
+    padding: 20px;
+    border-left: 1px solid #EBEEF5;
+}
