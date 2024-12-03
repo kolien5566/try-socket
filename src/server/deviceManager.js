@@ -1,38 +1,25 @@
 // deviceManager.js
-const db = require('./database');
-
 class DeviceManager {
     constructor(io) {
-        this.devices = new Map();
+        this.devices = new Map(); // 保存设备列表
         this.io = io;
 
         // 处理WebSocket连接
         this.io.on('connection', (socket) => {
             console.log('Web client connected');
             
-            // 发送当前所有设备状态
-            const deviceStatus = Array.from(this.devices.entries()).map(([sn, device]) => ({
-                sn,
-                status: device.status,
-                lastHeartbeat: device.lastHeartbeat
-            }));
-            socket.emit('deviceList', deviceStatus);
+            // 发送当前设备列表给新连接的客户端
+            const deviceList = Array.from(this.devices.keys());
+            socket.emit('deviceList', deviceList);
 
-            // 处理前端发来的配置更新请求
-            socket.on('updateConfig', async (data) => {
-                const { sn, config } = data;
-                await this.updateDeviceConfig(sn, config);
+            // 客户端请求订阅某个设备的秒级数据
+            socket.on('subscribeDevice', (sn) => {
+                socket.join(sn); // 加入设备房间
             });
 
-            // 处理前端请求设备历史数据
-            socket.on('getHistory', async (data) => {
-                const { sn, startTime, endTime } = data;
-                try {
-                    const history = await db.getRunningHistory(sn, startTime, endTime);
-                    socket.emit('historyData', { sn, history });
-                } catch (err) {
-                    console.error('Error fetching history:', err);
-                }
+            // 客户端取消订阅某个设备的秒级数据
+            socket.on('unsubscribeDevice', (sn) => {
+                socket.leave(sn);
             });
 
             socket.on('disconnect', () => {
@@ -42,89 +29,36 @@ class DeviceManager {
     }
 
     // 添加设备
-    async addDevice(sn, socket) {
-        const deviceInfo = {
-            sn,
+    addDevice(sn, socket) {
+        this.devices.set(sn, {
             socket,
-            status: 'online',
             lastHeartbeat: Date.now()
-        };
-
-        // 获取最新配置
-        const config = await db.getLatestConfig(sn);
-        if (config) {
-            deviceInfo.config = config;
-        }
-
-        this.devices.set(sn, deviceInfo);
-        this.notifyDeviceUpdate(sn, 'online');
+        });
         
-        return deviceInfo;
+        // 通知所有Web客户端有新设备上线
+        this.io.emit('deviceOnline', sn);
     }
 
     // 移除设备
     removeDevice(sn) {
-        const device = this.devices.get(sn);
-        if (device) {
-            device.socket.destroy();
-            this.devices.delete(sn);
-            this.notifyDeviceUpdate(sn, 'offline');
-        }
+        this.devices.delete(sn);
+        // 通知所有Web客户端设备离线
+        this.io.emit('deviceOffline', sn);
     }
 
-    // 更新设备状态
-    updateDeviceStatus(sn, status) {
-        const device = this.devices.get(sn);
-        if (device) {
-            device.status = status;
-            device.lastHeartbeat = Date.now();
-            this.notifyDeviceUpdate(sn, status);
-        }
-    }
-
-    // 保存运行数据
-    async saveRunningData(sn, data) {
-        try {
-            await db.saveRunningData(sn, data);
-            this.notifyDeviceUpdate(sn, 'data_update');
-        } catch (err) {
-            console.error('Error saving running data:', err);
-        }
-    }
-
-    // 更新设备配置
-    async updateDeviceConfig(sn, config) {
-        try {
-            await db.saveDeviceConfig(sn, config);
-            const device = this.devices.get(sn);
-            if (device) {
-                // 发送配置到设备
-                // 这里需要根据你的协议格式构造消息
-                const configMessage = this.constructConfigMessage(config);
-                device.socket.write(configMessage);
-            }
-            this.notifyDeviceUpdate(sn, 'config_update');
-            return true;
-        } catch (err) {
-            console.error('Error updating config:', err);
-            return false;
-        }
-    }
-
-    // 通过WebSocket通知前端
-    notifyDeviceUpdate(sn, status) {
-        const device = this.devices.get(sn);
-        this.io.emit('deviceUpdate', {
+    // 处理秒级数据
+    handleSecondData(sn, data) {
+        // 向订阅了该设备的客户端推送数据
+        this.io.to(sn).emit('secondData', {
             sn,
-            status,
-            lastHeartbeat: device ? device.lastHeartbeat : Date.now(),
+            data,
             timestamp: Date.now()
         });
     }
 
-    // 获取设备
-    getDevice(sn) {
-        return this.devices.get(sn);
+    // 获取所有在线设备
+    getOnlineDevices() {
+        return Array.from(this.devices.keys());
     }
 }
 

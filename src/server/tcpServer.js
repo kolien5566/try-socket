@@ -57,11 +57,12 @@ class TcpServer {
                     console.log('心跳');
                     break;
                 case '010102': // 登录
+                    console.log('登录');
                     const deviceSN = message.data.UserName;
                     await this.deviceManager.addDevice(deviceSN, socket);
                     const successResponse = Protocol.constructMessage(
                         Buffer.from([0x01, 0x02, 0x02]),
-                        { "Status": "Success" }
+                        { Status: "Success" }
                     );
                     socket.write(successResponse);
                     break;
@@ -90,15 +91,23 @@ class TcpServer {
                     break;
                 case '010110': // 秒级数据
                     console.log('10秒级数据');
-                    console.log(message.data);
+                    if (message.data && message.data.SN) {
+                        this.deviceManager.handleSecondData(message.data.SN, message.data);
+                    }
                     break;
+
                 case '010104': // setConfig
                     console.log('04配置');
-                    console.log(message.data);
                     break;
                 case '010115': // setConfigExtend
                     console.log('15配置');
-                    console.log(message.data);
+                    // 发送断点续传数据
+                    // console.log('断点续传');
+                    // const dataResponse = Protocol.constructMessage(
+                    //     Buffer.from([0x01, 0x02, 0x0c]),
+                    //     { SN: "20010TP2C3W00025", }
+                    // );
+                    // socket.write(dataResponse);
                     break;
                 default: // 其他
                     console.log('Unknown message:', messageHeader);

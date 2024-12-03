@@ -1,20 +1,38 @@
-.device-container {
+.main-container {
+    height: 100vh;
+}
+
+.el-header {
+    background-color: #545c64;
+    color: white;
+    line-height: 60px;
+    padding: 0 20px;
+}
+
+.el-aside {
+    background-color: #f5f7fa;
     padding: 20px;
 }
 
-.status-online {
-    color: #67C23A;
-}
-
-.status-offline {
-    color: #F56C6C;
-}
-
-.device-card {
-    margin-bottom: 20px;
-}
-
-.config-panel {
+.el-main {
     padding: 20px;
-    border-left: 1px solid #EBEEF5;
+}
+
+.device-list {
+    height: calc(100vh - 100px);
+}
+
+.data-detail {
+    height: calc(100vh - 100px);
+    overflow-y: auto;
+}
+
+.card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.el-descriptions {
+    margin-top: 20px;
 }

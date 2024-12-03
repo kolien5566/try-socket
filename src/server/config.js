@@ -1,6 +1,6 @@
 const baseConfig = {
     Status: "Success",
-    SN: "ALD0A0124070002",
+    SN: "20010TP2C3W00025",
     License: null,
     Country: null,
     Address: null,
