@@ -55,11 +55,6 @@ class DeviceManager {
             timestamp: Date.now()
         });
     }
-
-    // 获取所有在线设备
-    getOnlineDevices() {
-        return Array.from(this.devices.keys());
-    }
 }
 
 module.exports = DeviceManager;

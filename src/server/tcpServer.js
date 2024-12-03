@@ -1,4 +1,3 @@
-// tcpServer.js
 const net = require('net');
 const Protocol = require('./protocol');
 const { baseConfig } = require('./config');
@@ -47,7 +46,7 @@ class TcpServer {
         });
     }
 
-    // 这里是被动响应
+    // 响应
     async handleMessage(socket, message) {
         // 消息头
         const messageHeader = message.header.toString('hex');
@@ -65,9 +64,6 @@ class TcpServer {
                         { Status: "Success" }
                     );
                     socket.write(successResponse);
-                    break;
-                case '01010f': // 故障解析
-                    console.log('故障解析');
                     break;
                 case '010103': // getConfig
                     console.log('03配置');
@@ -95,19 +91,14 @@ class TcpServer {
                         this.deviceManager.handleSecondData(message.data.SN, message.data);
                     }
                     break;
-
                 case '010104': // setConfig
                     console.log('04配置');
                     break;
                 case '010115': // setConfigExtend
                     console.log('15配置');
-                    // 发送断点续传数据
-                    // console.log('断点续传');
-                    // const dataResponse = Protocol.constructMessage(
-                    //     Buffer.from([0x01, 0x02, 0x0c]),
-                    //     { SN: "20010TP2C3W00025", }
-                    // );
-                    // socket.write(dataResponse);
+                    break;
+                case '01010f': // 故障解析
+                    console.log('故障解析');
                     break;
                 default: // 其他
                     console.log('Unknown message:', messageHeader);
