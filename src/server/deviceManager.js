@@ -78,14 +78,6 @@ class DeviceManager {
         }
     }
 
-    getDeviceList() {
-        return Array.from(this.devices.entries())
-            .map(([sn, device]) => ({
-                sn,
-                online: device.online
-            }));
-    }
-
     handleSecondData(sn, data) {
         const device = this.devices.get(sn);
         if (device) {
@@ -116,11 +108,23 @@ class DeviceManager {
         }
     }
 
-    notifyResumeDataSaved(deviceSN, fileName) {
-        this.io.to(deviceSN).emit('resumeDataSaved', {
-            sn: deviceSN,
-            fileName: fileName,
-            timestamp: Date.now()
+    notifyResumeData(deviceSN, csvData) {
+        // 解析 CSV 数据
+        const rows = csvData.split('\n');
+        const headers = rows[0].split(',');
+        const data = rows.slice(1).map(row => {
+            const values = row.split(',');
+            const rowData = {};
+            headers.forEach((header, index) => {
+                rowData[header] = values[index];
+            });
+            return rowData;
+        });
+    
+        this.io.emit('resumeData', {
+            deviceSN,
+            headers,
+            data
         });
     }
 }

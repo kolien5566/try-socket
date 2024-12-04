@@ -84,9 +84,6 @@ class TcpServer {
             switch (messageHeader) {
                 case '010100': // 心跳
                     console.log('心跳');
-                    if (deviceSN) {
-                        this.deviceHeartbeats.set(deviceSN, Date.now());
-                    }
                     break;
 
                 case '010102': // 登录
@@ -145,6 +142,9 @@ class TcpServer {
 
                 case '010110': // 秒级数据
                     console.log('10秒级数据');
+                    if (deviceSN) {
+                        this.deviceHeartbeats.set(deviceSN, Date.now());
+                    }
                     const secondData = JSON.parse(message.data.toString());
                     if (secondData && secondData.SN) {
                         this.deviceManager.handleSecondData(secondData.SN, secondData);
@@ -189,20 +189,14 @@ class TcpServer {
                     socket.write(infoResponse);
                     break;
                 case '01010c': // Resume Data
-                    try {
-                        const fs = require('fs').promises; // 使用 promises 版本避免回调
-                        const fileName = `resume_data_${Date.now()}.txt`;
-                        await fs.writeFile(fileName, message.data);
-                        console.log('The data was wrote to file:', fileName);
-                        this.deviceManager.notifyResumeDataSaved(deviceSN, fileName);
-                    } catch (err) {
-                        console.error('保存历史数据失败:', err);
-                    }
+                    const csvData = message.data.toString();
                     const resumeResponse = Protocol.constructMessage(
                         Buffer.from([0x01, 0x02, 0x0c]),
                         { Status: "Success" }
                     );
                     socket.write(resumeResponse);
+                    // 通知 WebSocket
+                    this.deviceManager.notifyResumeData(deviceSN, csvData);
                     break;
                 default: // 其他
                     console.log('Unknown message:', messageHeader);
