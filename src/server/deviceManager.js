@@ -1,25 +1,44 @@
-// deviceManager.js
 class DeviceManager {
-    constructor(io) {
-        this.devices = new Map(); // 保存设备列表
+    constructor(io, tcpServer) {  // 添加tcpServer参数
+        this.devices = new Map();
         this.io = io;
+        this.tcpServer = tcpServer;  // 保存tcpServer引用
 
-        // 处理WebSocket连接
         this.io.on('connection', (socket) => {
             console.log('Web client connected');
-            
-            // 发送当前设备列表给新连接的客户端
-            const deviceList = Array.from(this.devices.keys());
+
+            const deviceList = Array.from(this.devices.entries())
+                .map(([sn, device]) => ({
+                    sn,
+                    online: device.online
+                }));
             socket.emit('deviceList', deviceList);
 
             // 客户端请求订阅某个设备的秒级数据
             socket.on('subscribeDevice', (sn) => {
-                socket.join(sn); // 加入设备房间
+                socket.join(sn);
             });
 
             // 客户端取消订阅某个设备的秒级数据
             socket.on('unsubscribeDevice', (sn) => {
                 socket.leave(sn);
+            });
+
+            // 添加处理Resume Data请求的监听器
+            socket.on('requestResumeData', async (data) => {
+                try {
+                    const { sn, startTime, packCount } = data;
+                    await this.requestResumeData(sn, startTime, packCount);
+                    socket.emit('requestResumeDataResponse', {
+                        success: true,
+                        message: 'Request sent successfully'
+                    });
+                } catch (error) {
+                    socket.emit('requestResumeDataResponse', {
+                        success: false,
+                        message: error.message
+                    });
+                }
             });
 
             socket.on('disconnect', () => {
@@ -28,30 +47,82 @@ class DeviceManager {
         });
     }
 
-    // 添加设备
-    addDevice(sn, socket) {
+    // 之前的方法保持不变...
+    async getDevice(sn) {
+        return this.devices.get(sn);
+    }
+
+    async addDevice(sn, socket) {
         this.devices.set(sn, {
             socket,
-            lastHeartbeat: Date.now()
+            online: true,
+            lastData: null
         });
         
-        // 通知所有Web客户端有新设备上线
         this.io.emit('deviceOnline', sn);
     }
 
-    // 移除设备
-    removeDevice(sn) {
-        this.devices.delete(sn);
-        // 通知所有Web客户端设备离线
-        this.io.emit('deviceOffline', sn);
+    async setDeviceOnline(sn, socket) {
+        const device = this.devices.get(sn);
+        if (device) {
+            device.socket = socket;
+            device.online = true;
+            this.io.emit('deviceOnline', sn);
+        }
     }
 
-    // 处理秒级数据
+    async setDeviceOffline(sn) {
+        const device = this.devices.get(sn);
+        if (device) {
+            device.online = false;
+            this.io.emit('deviceOffline', sn);
+        }
+    }
+
+    getDeviceList() {
+        return Array.from(this.devices.entries())
+            .map(([sn, device]) => ({
+                sn,
+                online: device.online
+            }));
+    }
+
     handleSecondData(sn, data) {
-        // 向订阅了该设备的客户端推送数据
+        const device = this.devices.get(sn);
+        if (device) {
+            device.lastData = {
+                data,
+                timestamp: Date.now()
+            };
+        }
+
         this.io.to(sn).emit('secondData', {
             sn,
             data,
+            timestamp: Date.now()
+        });
+    }
+
+    // 新增的方法
+    async requestResumeData(sn, startTime, packCount) {
+        const device = this.devices.get(sn);
+        if (!device || !device.online) {
+            throw new Error('Device is offline or not found');
+        }
+
+        try {
+            return await this.tcpServer.requestResumeData(sn, startTime, packCount);
+        } catch (err) {
+            console.error('Request resume data failed:', err);
+            throw err;
+        }
+    }
+
+    // 通知前端历史数据已保存
+    notifyResumeDataSaved(deviceSN, fileName) {
+        this.io.to(deviceSN).emit('resumeDataSaved', {
+            sn: deviceSN,
+            fileName: fileName,
             timestamp: Date.now()
         });
     }

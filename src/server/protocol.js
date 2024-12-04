@@ -1,21 +1,38 @@
 class Protocol {
     static parseMessage(buffer) {
+        // 检查数据长度是否至少包含头部和长度字段
+        if (buffer.length < 7) {
+            return null;
+        }
+
         const header = buffer.slice(0, 3);
         const length = buffer.readUInt32BE(3);
+
+        // 检查是否收到完整的消息
+        if (buffer.length < 7 + length) {
+            return null;
+        }
+
         const jsonData = buffer.slice(7, 7 + length);
         const checksum = buffer.slice(7 + length);
         let headerHex = header.toString('hex');
+
         if (headerHex.startsWith("01")) {
             // 心跳,故障解析等我不想做的内容
             if (headerHex == '010100' || headerHex == '01010f') {
                 return { header };
             }
-            return {
-                header,
-                length,
-                data: JSON.parse(jsonData.toString()),
-                checksum
-            };
+            try {
+                return {
+                    header,
+                    length,
+                    data: JSON.parse(jsonData.toString()),
+                    checksum
+                };
+            } catch (e) {
+                console.log('Incomplete or invalid JSON data:', jsonData.toString());
+                return null;
+            }
         }
         return null;
     }
