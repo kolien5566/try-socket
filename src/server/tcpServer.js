@@ -97,7 +97,7 @@ class TcpServer {
                     if (heartbeatTimer) clearInterval(heartbeatTimer);
                     setHeartbeatTimer(setInterval(() => {
                         const lastHeartbeat = this.deviceHeartbeats.get(newDeviceSN);
-                        if (lastHeartbeat && (Date.now() - lastHeartbeat > 60000)) {
+                        if (lastHeartbeat && (Date.now() - lastHeartbeat > 30000)) {
                             console.log(`Device ${newDeviceSN} heartbeat timeout`);
                             this.deviceManager.setDeviceOffline(newDeviceSN);
                             socket.destroy();
