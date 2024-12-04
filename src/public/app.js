@@ -175,10 +175,10 @@ export const App = {
 
         handleResumeClick(row) {
             if (!row.online) return;
-
+            this.handleResumeData({ headers: [], data: null });
             try {
                 const startTime = new Date();
-                startTime.setMinutes(startTime.getMinutes() - 10);
+                startTime.setDate(startTime.getDate() - 1);
                 const formattedTime = startTime.toLocaleString('zh-CN', {
                     year: 'numeric',
                     month: '2-digit',
@@ -188,12 +188,12 @@ export const App = {
                     second: '2-digit'
                 }).replace(/\./g, '/');
                 this.selectedDevice = row.sn;
-                this.currentView = 'resume'; 
-                
+                this.currentView = 'resume';
+                console.log(formattedTime);
                 this.socket.emit('requestResumeData', {
                     sn: row.sn,
                     startTime: formattedTime,
-                    packCount: 1000,
+                    packCount: 1500,
                 });
                 this.$message({
                     message: 'Resume data request sent',
