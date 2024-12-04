@@ -14,14 +14,12 @@
     <script src="https://unpkg.com/element-plus"></script>
     <script src="/socket.io/socket.io.js"></script>
     
-    <!-- 使用type="module"引入主应用 -->
+    <!-- 引入vue主应用 -->
     <script type="module">
-        import { App } from '/js/app.js';
-        import { socket } from '/js/socket.js';
-
+        import { App } from './app.js';
         const { createApp } = Vue;
         const app = createApp(App);
-        app.config.globalProperties.$socket = socket;
+        app.config.globalProperties.$socket = io();
         app.use(ElementPlus);
         app.mount('#app');
     </script>

@@ -1,40 +1,20 @@
 class Protocol {
     static parseMessage(buffer) {
-        // 检查数据长度是否至少包含头部和长度字段
-        if (buffer.length < 7) {
+        if (buffer.length < 7 || buffer[0] != 0x01) {
             return null;
         }
 
         const header = buffer.slice(0, 3);
         const length = buffer.readUInt32BE(3);
-
-        // 检查是否收到完整的消息
-        if (buffer.length < 7 + length) {
-            return null;
-        }
-
-        const jsonData = buffer.slice(7, 7 + length);
+        const data = buffer.slice(7, 7 + length);
         const checksum = buffer.slice(7 + length);
-        let headerHex = header.toString('hex');
 
-        if (headerHex.startsWith("01")) {
-            // 心跳,故障解析等我不想做的内容
-            if (headerHex == '010100' || headerHex == '01010f') {
-                return { header };
-            }
-            try {
-                return {
-                    header,
-                    length,
-                    data: JSON.parse(jsonData.toString()),
-                    checksum
-                };
-            } catch (e) {
-                console.log('Incomplete or invalid JSON data:', jsonData.toString());
-                return null;
-            }
-        }
-        return null;
+        return {
+            header,
+            length,
+            data,
+            checksum,
+        };
     }
 
     static constructMessage(header, data) {
@@ -42,11 +22,9 @@ class Protocol {
         // 创建4字节的长度字段
         const length = Buffer.alloc(4);
         length.writeUInt32BE(jsonData.length);
-
         // 计算CRC的数据
         const dataForCRC = Buffer.concat([header, length, jsonData]);
         const crc = this.calculateModbusCRC(dataForCRC);
-
         // 创建2字节的校验和
         const checksum = Buffer.alloc(2);
         checksum.writeUInt16LE(crc);

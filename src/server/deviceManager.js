@@ -47,7 +47,6 @@ class DeviceManager {
         });
     }
 
-    // 之前的方法保持不变...
     async getDevice(sn) {
         return this.devices.get(sn);
     }
@@ -103,7 +102,6 @@ class DeviceManager {
         });
     }
 
-    // 新增的方法
     async requestResumeData(sn, startTime, packCount) {
         const device = this.devices.get(sn);
         if (!device || !device.online) {
@@ -118,7 +116,6 @@ class DeviceManager {
         }
     }
 
-    // 通知前端历史数据已保存
     notifyResumeDataSaved(deviceSN, fileName) {
         this.io.to(deviceSN).emit('resumeDataSaved', {
             sn: deviceSN,

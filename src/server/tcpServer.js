@@ -6,7 +6,8 @@ class TcpServer {
     constructor(deviceManager) {
         this.server = net.createServer();
         this.deviceManager = deviceManager;
-        this.deviceHeartbeats = new Map(); // 存储设备最后心跳时间
+        // 存储设备最后心跳时间
+        this.deviceHeartbeats = new Map();
     }
 
     start(port) {
@@ -16,30 +17,15 @@ class TcpServer {
             let heartbeatTimer = null;
 
             socket.on('data', async (data) => {
-                try {
-                    console.log(data);
-                    // data记录到文件
-                    const fs = require('fs');
-                    // 当data（buffer）是01 01 0c开头的时候，写入到文件
-                    if (data[0] === 0x01 && data[1] === 0x01 && data[2] === 0x0c) {
-                        fs.appendFile('data.txt', data, (err) => {
-                            if (err) throw err;
-                            console.log('The data was appended to file!');
-                        });
-                    }
-
-                    const message = Protocol.parseMessage(data);
-                    if (message != null) {
-                        await this.handleMessage(socket, message, deviceSN, heartbeatTimer, (sn) => {
-                            deviceSN = sn;
-                        }, (timer) => {
-                            heartbeatTimer = timer;
-                        });
-                    } else {
-                        console.error('Not Parsed!');
-                    }
-                } catch (err) {
-                    console.error('Error handling message:', err);
+                const message = Protocol.parseMessage(data);
+                if (message != null) {
+                    await this.handleMessage(socket, message, deviceSN, heartbeatTimer, (sn) => {
+                        deviceSN = sn;
+                    }, (timer) => {
+                        heartbeatTimer = timer;
+                    });
+                } else {
+                    console.error('Not Parsed!');
                 }
             });
 
@@ -88,10 +74,8 @@ class TcpServer {
                 Parameter2: packCount.toString()
             }
         );
-
-        // 发送请求
         device.socket.write(message);
-        return cmdIndex; // 返回cmdIndex以便跟踪请求
+        return cmdIndex;
     }
 
     async handleMessage(socket, message, deviceSN, heartbeatTimer, setDeviceSN, setHeartbeatTimer) {
@@ -107,7 +91,8 @@ class TcpServer {
 
                 case '010102': // 登录
                     console.log('登录');
-                    const newDeviceSN = message.data.UserName;
+                    const loginData = JSON.parse(message.data.toString());
+                    const newDeviceSN = loginData.UserName;
                     setDeviceSN(newDeviceSN);
 
                     // 更新心跳时间和定时器
@@ -129,16 +114,16 @@ class TcpServer {
                     } else {
                         await this.deviceManager.addDevice(newDeviceSN, socket);
                     }
-                    const successResponse = Protocol.constructMessage(
+                    const loginResponse = Protocol.constructMessage(
                         Buffer.from([0x01, 0x02, 0x02]),
                         { Status: "Success" }
                     );
-                    socket.write(successResponse);
+                    socket.write(loginResponse);
                     break;
 
                 case '010103': // getConfig
                     console.log('03配置');
-                    if (message.data && message.data.SN) {
+                    if (message.data) {
                         const dataResponse = Protocol.constructMessage(
                             Buffer.from([0x01, 0x02, 0x03]),
                             baseConfig,
@@ -149,7 +134,7 @@ class TcpServer {
 
                 case '010114': // getConfigExtend
                     console.log('14配置');
-                    if (message.data && message.data.SN) {
+                    if (message.data) {
                         const dataResponse = Protocol.constructMessage(
                             Buffer.from([0x01, 0x02, 0x14]),
                             baseConfig,
@@ -160,28 +145,64 @@ class TcpServer {
 
                 case '010110': // 秒级数据
                     console.log('10秒级数据');
-                    if (message.data && message.data.SN) {
-                        this.deviceManager.handleSecondData(message.data.SN, message.data);
+                    const secondData = JSON.parse(message.data.toString());
+                    if (secondData && secondData.SN) {
+                        this.deviceManager.handleSecondData(secondData.SN, secondData);
                     }
                     break;
 
                 case '010104': // setConfig
                     console.log('04配置');
+                    const setConfigResponse = Protocol.constructMessage(
+                        Buffer.from([0x01, 0x02, 0x04]),
+                        { Status: "Success" }
+                    );
+                    socket.write(setConfigResponse);
                     break;
 
                 case '010115': // setConfigExtend
                     console.log('15配置');
+                    const setConfigExtendResponse = Protocol.constructMessage(
+                        Buffer.from([0x01, 0x02, 0x15]),
+                        { Status: "Success" }
+                    );
+                    socket.write(setConfigExtendResponse);
                     break;
 
                 case '01010f': // 故障解析
                     console.log('故障解析');
+                    const faultResponse = Protocol.constructMessage(
+                        Buffer.from([0x01, 0x02, 0x0f]),
+                        { Status: "Success" }
+                    );
+                    socket.write(faultResponse);
                     break;
                 case '010208':
                     console.log('EMS回复特殊指令');
                     break;
+                case '010109':
+                    console.log('09info');
+                    const infoResponse = Protocol.constructMessage(
+                        Buffer.from([0x01, 0x02, 0x09]),
+                        { Status: "Success" }
+                    );
+                    socket.write(infoResponse);
+                    break;
                 case '01010c': // Resume Data
-                    console.log('获取resume data');
-                    console.log(message.data)
+                    try {
+                        const fs = require('fs').promises; // 使用 promises 版本避免回调
+                        const fileName = `resume_data_${Date.now()}.txt`;
+                        await fs.writeFile(fileName, message.data);
+                        console.log('The data was wrote to file:', fileName);
+                        this.deviceManager.notifyResumeDataSaved(deviceSN, fileName);
+                    } catch (err) {
+                        console.error('保存历史数据失败:', err);
+                    }
+                    const resumeResponse = Protocol.constructMessage(
+                        Buffer.from([0x01, 0x02, 0x0c]),
+                        { Status: "Success" }
+                    );
+                    socket.write(resumeResponse);
                     break;
                 default: // 其他
                     console.log('Unknown message:', messageHeader);

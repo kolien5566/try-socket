@@ -152,7 +152,8 @@ export const App = {
             try {
                 // 获取当前时间前100小时的时间点
                 const startTime = new Date();
-                startTime.setHours(startTime.getHours() - 100);
+                //startTime.setHours(startTime.getHours());
+                startTime.setMinutes(startTime.getMinutes() - 10);
                 const formattedTime = startTime.toLocaleString('zh-CN', {
                     year: 'numeric',
                     month: '2-digit',
@@ -165,7 +166,7 @@ export const App = {
                 await this.socket.emit('requestResumeData', {
                     sn: device.sn,
                     startTime: formattedTime,
-                    packCount: 12
+                    packCount: 5
                 });
 
                 this.$message({

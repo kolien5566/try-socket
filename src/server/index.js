@@ -12,6 +12,6 @@ const tcpServer = new TcpServer(deviceManager);
 // 这里耦合了，但是我懒得改
 deviceManager.tcpServer = tcpServer;
 
-// 启动服务器
+// 启动服务
 webServer.start(3000);
 tcpServer.start(7777);
