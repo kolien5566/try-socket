@@ -1,6 +1,5 @@
 const net = require('net');
 const Protocol = require('./protocol');
-const { baseConfig } = require('./config');
 
 class TcpServer {
     constructor(deviceManager) {
