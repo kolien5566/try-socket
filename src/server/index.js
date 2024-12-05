@@ -13,5 +13,5 @@ const tcpServer = new TcpServer(deviceManager);
 deviceManager.tcpServer = tcpServer;
 
 // 启动服务
-webServer.start(80);
+webServer.start(3000);
 tcpServer.start(7777);

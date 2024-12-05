@@ -123,7 +123,7 @@ class TcpServer {
                     if (message.data) {
                         const dataResponse = Protocol.constructMessage(
                             Buffer.from([0x01, 0x02, 0x03]),
-                            baseConfig,
+                            { Status: "Success" }
                         );
                         socket.write(dataResponse);
                     }
@@ -134,7 +134,7 @@ class TcpServer {
                     if (message.data) {
                         const dataResponse = Protocol.constructMessage(
                             Buffer.from([0x01, 0x02, 0x14]),
-                            baseConfig,
+                            { Status: "Success" }
                         );
                         socket.write(dataResponse);
                     }

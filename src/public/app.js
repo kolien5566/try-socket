@@ -189,7 +189,6 @@ export const App = {
                 }).replace(/\./g, '/');
                 this.selectedDevice = row.sn;
                 this.currentView = 'resume';
-                console.log(formattedTime);
                 this.socket.emit('requestResumeData', {
                     sn: row.sn,
                     startTime: formattedTime,
