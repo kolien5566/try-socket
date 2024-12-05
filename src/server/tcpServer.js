@@ -192,6 +192,7 @@ class TcpServer {
                     socket.write(infoResponse);
                     break;
                 case '01010c': // Resume Data
+                    console.log('0c resume data');
                     const csvData = message.data.toString();
                     const resumeResponse = Protocol.constructMessage(
                         Buffer.from([0x01, 0x02, 0x0c]),
