@@ -82,11 +82,11 @@ class TcpServer {
         try {
             switch (messageHeader) {
                 case '010100': // 心跳
-                    console.log('心跳');
+                    console.log('00 heartbeat');
                     break;
 
                 case '010102': // 登录
-                    console.log('登录');
+                    console.log('02 login');
                     const loginData = JSON.parse(message.data.toString());
                     const newDeviceSN = loginData.UserName;
                     setDeviceSN(newDeviceSN);
@@ -118,7 +118,7 @@ class TcpServer {
                     break;
 
                 case '010103': // getConfig
-                    console.log('03配置');
+                    console.log('03 getConfig');
                     if (message.data) {
                         const dataResponse = Protocol.constructMessage(
                             Buffer.from([0x01, 0x02, 0x03]),
@@ -129,7 +129,7 @@ class TcpServer {
                     break;
 
                 case '010114': // getConfigExtend
-                    console.log('14配置');
+                    console.log('14 getConfigExtend');
                     if (message.data) {
                         const dataResponse = Protocol.constructMessage(
                             Buffer.from([0x01, 0x02, 0x14]),
@@ -140,18 +140,22 @@ class TcpServer {
                     break;
 
                 case '010110': // 秒级数据
-                    console.log('10秒级数据');
-                    if (deviceSN) {
-                        this.deviceHeartbeats.set(deviceSN, Date.now());
-                    }
-                    const secondData = JSON.parse(message.data.toString());
-                    if (secondData && secondData.SN) {
-                        this.deviceManager.handleSecondData(secondData.SN, secondData);
+                    console.log('10 second data');
+                    try {
+                        if (deviceSN) {
+                            this.deviceHeartbeats.set(deviceSN, Date.now());
+                        }
+                        const secondData = JSON.parse(message.data.toString());
+                        if (secondData && secondData.SN) {
+                            this.deviceManager.handleSecondData(secondData.SN, secondData);
+                        }
+                    } catch (err) {
+                        console.error('Error in 10 second data:', err);
                     }
                     break;
 
                 case '010104': // setConfig
-                    console.log('04配置');
+                    console.log('04 setConfig');
                     const setConfigResponse = Protocol.constructMessage(
                         Buffer.from([0x01, 0x02, 0x04]),
                         { Status: "Success" }
@@ -160,7 +164,7 @@ class TcpServer {
                     break;
 
                 case '010115': // setConfigExtend
-                    console.log('15配置');
+                    console.log('15 setConfigExtend');
                     const setConfigExtendResponse = Protocol.constructMessage(
                         Buffer.from([0x01, 0x02, 0x15]),
                         { Status: "Success" }
@@ -169,7 +173,7 @@ class TcpServer {
                     break;
 
                 case '01010f': // 故障解析
-                    console.log('故障解析');
+                    console.log('0f fault');
                     const faultResponse = Protocol.constructMessage(
                         Buffer.from([0x01, 0x02, 0x0f]),
                         { Status: "Success" }
@@ -177,10 +181,10 @@ class TcpServer {
                     socket.write(faultResponse);
                     break;
                 case '010208':
-                    console.log('EMS回复特殊指令');
+                    console.log('08 reply ems command');
                     break;
                 case '010109':
-                    console.log('09info');
+                    console.log('09 info');
                     const infoResponse = Protocol.constructMessage(
                         Buffer.from([0x01, 0x02, 0x09]),
                         { Status: "Success" }
