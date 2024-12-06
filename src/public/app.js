@@ -55,7 +55,7 @@ export const App = {
                         v-if="currentView === 'running'"
                         :data="runningData"
                         style="width: 100%"
-                        height="380"
+                        height="450"
                         border>
                         <el-table-column
                             v-for="(_, key) in dataKeys"
@@ -71,7 +71,7 @@ export const App = {
                         v-else-if="currentView === 'resume'"
                         :data="resumeData"
                         style="width: 100%"
-                        height="380"
+                        height="450"
                         border>
                         <el-table-column
                             v-for="header in resumeHeaders"
