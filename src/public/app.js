@@ -178,7 +178,7 @@ export const App = {
             this.handleResumeData({ headers: [], data: null });
             try {
                 const startTime = new Date();
-                startTime.setDate(startTime.getDate() - 1);
+                startTime.setDate(startTime.getHours() - 12);
                 const formattedTime = startTime.toLocaleString('zh-CN', {
                     year: 'numeric',
                     month: '2-digit',
