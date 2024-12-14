@@ -15,11 +15,16 @@ class TcpServer {
 
     start(port) {
         this.server.on('connection', (socket) => {
+
+            const clientIP = socket.remoteAddress;
+            const clientPort = socket.remotePort;
             // 增加连接计数
             this.activeConnections++;
             console.log('New device connected');
+            console.log(`New device connected from ${clientIP}:${clientPort}`);
             console.log(`Current active connections: ${this.activeConnections}`);
 
+            
             // 可选：记录连接详情
             const connectionId = `${socket.remoteAddress}:${socket.remotePort}`;
             this.connections.set(connectionId, {
