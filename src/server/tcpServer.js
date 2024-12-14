@@ -95,17 +95,6 @@ class TcpServer {
         this.server.listen(port, () => {
             console.log(`TCP Server listening on port ${port}`);
         });
-
-        // 可选：添加定期打印连接状态的功能
-        setInterval(() => {
-            console.log(`\n=== Connection Status ===`);
-            console.log(`Active connections: ${this.activeConnections}`);
-            console.log(`Connected devices: ${this.connections.size}`);
-            this.connections.forEach((conn, id) => {
-                console.log(`- ${id} ${conn.deviceSN ? `(Device: ${conn.deviceSN})` : '(Not identified)'}`);
-            });
-            console.log(`=====================\n`);
-        }, 60000); // 每分钟打印一次
     }
 
 
