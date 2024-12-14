@@ -20,7 +20,6 @@ class TcpServer {
             const clientPort = socket.remotePort;
             // 增加连接计数
             this.activeConnections++;
-            console.log('New device connected');
             console.log(`New device connected from ${clientIP}:${clientPort}`);
             console.log(`Current active connections: ${this.activeConnections}`);
 
