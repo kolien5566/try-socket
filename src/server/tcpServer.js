@@ -95,14 +95,14 @@ class TcpServer {
                     // 更新心跳时间和定时器
                     this.deviceHeartbeats.set(newDeviceSN, Date.now());
                     if (heartbeatTimer) clearInterval(heartbeatTimer);
-                    setHeartbeatTimer(setInterval(() => {
-                        const lastHeartbeat = this.deviceHeartbeats.get(newDeviceSN);
-                        if (lastHeartbeat && (Date.now() - lastHeartbeat > 30000)) {
-                            console.log(`Device ${newDeviceSN} heartbeat timeout`);
-                            this.deviceManager.setDeviceOffline(newDeviceSN);
-                            socket.destroy();
-                        }
-                    }, 10000));
+                    // setHeartbeatTimer(setInterval(() => {
+                    //     const lastHeartbeat = this.deviceHeartbeats.get(newDeviceSN);
+                    //     if (lastHeartbeat && (Date.now() - lastHeartbeat > 30000)) {
+                    //         console.log(`Device ${newDeviceSN} heartbeat timeout`);
+                    //         this.deviceManager.setDeviceOffline(newDeviceSN);
+                    //         socket.destroy();
+                    //     }
+                    // }, 10000));
 
                     // 处理设备登录
                     const device = await this.deviceManager.getDevice(newDeviceSN);
