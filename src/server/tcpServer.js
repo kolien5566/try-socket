@@ -12,6 +12,7 @@ class TcpServer {
     start(port) {
         this.server.on('connection', (socket) => {
             console.log('New device connected');
+            console.log(socket);
             let deviceSN = null;
             let heartbeatTimer = null;
 
