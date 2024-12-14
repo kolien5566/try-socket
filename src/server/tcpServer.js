@@ -25,6 +25,7 @@ class TcpServer {
                     });
                 } else {
                     console.error('Not Parsed!');
+                    console.log(data);
                 }
             });
 
