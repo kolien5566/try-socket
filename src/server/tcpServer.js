@@ -126,6 +126,9 @@ class TcpServer {
 
     async handleMessage(socket, message, deviceSN, heartbeatTimer, setDeviceSN, setHeartbeatTimer) {
         const messageHeader = message.header.toString('hex');
+        if(message.data) {
+            console.log(message.data.length);
+        }
         try {
             switch (messageHeader) {
                 case '010100': // 心跳
