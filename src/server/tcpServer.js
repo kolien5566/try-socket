@@ -7,12 +7,27 @@ class TcpServer {
         this.deviceManager = deviceManager;
         // 存储设备最后心跳时间
         this.deviceHeartbeats = new Map();
+        // 添加活动连接计数器
+        this.activeConnections = 0;
+        // 添加连接池（可选，用于更详细的连接管理）
+        this.connections = new Map();
     }
 
     start(port) {
         this.server.on('connection', (socket) => {
+            // 增加连接计数
+            this.activeConnections++;
             console.log('New device connected');
-            console.log(socket);
+            console.log(`Current active connections: ${this.activeConnections}`);
+
+            // 可选：记录连接详情
+            const connectionId = `${socket.remoteAddress}:${socket.remotePort}`;
+            this.connections.set(connectionId, {
+                socket: socket,
+                connectedAt: new Date(),
+                deviceSN: null
+            });
+
             let deviceSN = null;
             let heartbeatTimer = null;
 
@@ -21,6 +36,10 @@ class TcpServer {
                 if (message != null) {
                     await this.handleMessage(socket, message, deviceSN, heartbeatTimer, (sn) => {
                         deviceSN = sn;
+                        // 更新连接信息
+                        if (this.connections.has(connectionId)) {
+                            this.connections.get(connectionId).deviceSN = sn;
+                        }
                     }, (timer) => {
                         heartbeatTimer = timer;
                     });
@@ -31,6 +50,13 @@ class TcpServer {
             });
 
             socket.on('close', () => {
+                // 减少连接计数
+                this.activeConnections--;
+                console.log(`Connection closed. Current active connections: ${this.activeConnections}`);
+
+                // 清理连接信息
+                this.connections.delete(connectionId);
+
                 if (deviceSN) {
                     console.log(`Device ${deviceSN} disconnected`);
                     this.deviceManager.setDeviceOffline(deviceSN);
@@ -43,6 +69,7 @@ class TcpServer {
 
             socket.on('error', (err) => {
                 console.error('Socket error:', err);
+                // 错误处理时不需要减少计数，因为 close 事件会紧随其后
                 if (deviceSN) {
                     this.deviceManager.setDeviceOffline(deviceSN);
                     this.deviceHeartbeats.delete(deviceSN);
@@ -56,7 +83,19 @@ class TcpServer {
         this.server.listen(port, () => {
             console.log(`TCP Server listening on port ${port}`);
         });
+
+        // 可选：添加定期打印连接状态的功能
+        setInterval(() => {
+            console.log(`\n=== Connection Status ===`);
+            console.log(`Active connections: ${this.activeConnections}`);
+            console.log(`Connected devices: ${this.connections.size}`);
+            this.connections.forEach((conn, id) => {
+                console.log(`- ${id} ${conn.deviceSN ? `(Device: ${conn.deviceSN})` : '(Not identified)'}`);
+            });
+            console.log(`=====================\n`);
+        }, 60000); // 每分钟打印一次
     }
+
 
     // 获取历史数据
     async requestResumeData(deviceSN, startTime, packCount) {
