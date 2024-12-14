@@ -49,14 +49,25 @@ class TcpServer {
                 }
             });
 
-            socket.on('close', () => {
+            socket.on('close', (hadError) => {
                 // 减少连接计数
                 this.activeConnections--;
                 console.log(`Connection closed. Current active connections: ${this.activeConnections}`);
-
+                console.log('Close reason:', hadError ? 'Due to error' : 'Normal closure');
+                
+                // 如果存在最后的错误，输出错误信息
+                if (socket._lastError) {
+                    console.error('Last error before close:', {
+                        message: socket._lastError.message,
+                        code: socket._lastError.code,
+                        address: socket.remoteAddress,
+                        port: socket.remotePort
+                    });
+                }
+            
                 // 清理连接信息
                 this.connections.delete(connectionId);
-
+            
                 if (deviceSN) {
                     console.log(`Device ${deviceSN} disconnected`);
                     this.deviceManager.setDeviceOffline(deviceSN);
@@ -66,6 +77,7 @@ class TcpServer {
                     }
                 }
             });
+            
 
             socket.on('error', (err) => {
                 console.error('Socket error:', err);
