@@ -46,7 +46,7 @@ class TcpServer {
                         }
                     }, (timer) => {
                         heartbeatTimer = timer;
-                    });
+                    }, clientIP, clientPort);
                 } else {
                     console.error('Not Parsed!');
                     console.log(data);
@@ -123,7 +123,7 @@ class TcpServer {
         return cmdIndex;
     }
 
-    async handleMessage(socket, message, deviceSN, heartbeatTimer, setDeviceSN, setHeartbeatTimer) {
+    async handleMessage(socket, message, deviceSN, heartbeatTimer, setDeviceSN, setHeartbeatTimer, clientIP, clientPort) {
         const messageHeader = message.header.toString('hex');
         if(message.data) {
             console.log(message.data.length);
@@ -131,11 +131,11 @@ class TcpServer {
         try {
             switch (messageHeader) {
                 case '010100': // 心跳
-                    console.log('00 heartbeat');
+                    console.log(`${clientIP}:${clientPort} 00 heartbeat`);
                     break;
 
                 case '010102': // 登录
-                    console.log('02 login');
+                    console.log(`${clientIP}:${clientPort} 02 login`);
                     const loginData = JSON.parse(message.data.toString());
                     const newDeviceSN = loginData.UserName;
                     setDeviceSN(newDeviceSN);
@@ -167,7 +167,7 @@ class TcpServer {
                     break;
 
                 case '010103': // getConfig
-                    console.log('03 getConfig');
+                    console.log(`${clientIP}:${clientPort} 03 getConfig`);
                     if (message.data) {
                         const dataResponse = Protocol.constructMessage(
                             Buffer.from([0x01, 0x02, 0x03]),
@@ -178,7 +178,7 @@ class TcpServer {
                     break;
 
                 case '010114': // getConfigExtend
-                    console.log('14 getConfigExtend');
+                    console.log(`${clientIP}:${clientPort} 14 getConfigExtend`);
                     if (message.data) {
                         const dataResponse = Protocol.constructMessage(
                             Buffer.from([0x01, 0x02, 0x14]),
@@ -189,7 +189,7 @@ class TcpServer {
                     break;
 
                 case '010110': // 秒级数据
-                    console.log('10 second data');
+                    console.log(`${clientIP}:${clientPort} 10 second data`);
                     try {
                         if (deviceSN) {
                             this.deviceHeartbeats.set(deviceSN, Date.now());
@@ -204,7 +204,7 @@ class TcpServer {
                     break;
 
                 case '010104': // setConfig
-                    console.log('04 setConfig');
+                    console.log(`${clientIP}:${clientPort} 04 setConfig`);
                     const setConfigResponse = Protocol.constructMessage(
                         Buffer.from([0x01, 0x02, 0x04]),
                         { Status: "Success" }
@@ -213,7 +213,7 @@ class TcpServer {
                     break;
 
                 case '010115': // setConfigExtend
-                    console.log('15 setConfigExtend');
+                    console.log(`${clientIP}:${clientPort} 15 setConfigExtend`);
                     const setConfigExtendResponse = Protocol.constructMessage(
                         Buffer.from([0x01, 0x02, 0x15]),
                         { Status: "Success" }
@@ -222,7 +222,7 @@ class TcpServer {
                     break;
 
                 case '01010f': // 故障解析
-                    console.log('0f fault');
+                    console.log(`${clientIP}:${clientPort} 0f fault`);
                     const faultResponse = Protocol.constructMessage(
                         Buffer.from([0x01, 0x02, 0x0f]),
                         { Status: "Success" }
@@ -230,10 +230,10 @@ class TcpServer {
                     socket.write(faultResponse);
                     break;
                 case '010208':
-                    console.log('08 reply ems command');
+                    console.log(`${clientIP}:${clientPort} 08 reply ems command`);
                     break;
                 case '010109':
-                    console.log('09 info');
+                    console.log(`${clientIP}:${clientPort} 09 info`);
                     const infoResponse = Protocol.constructMessage(
                         Buffer.from([0x01, 0x02, 0x09]),
                         { Status: "Success" }
@@ -241,7 +241,7 @@ class TcpServer {
                     socket.write(infoResponse);
                     break;
                 case '01010c': // Resume Data
-                    console.log('0c resume data');
+                    console.log(`${clientIP}:${clientPort} 0c resume data`);
                     const csvData = message.data.toString();
                     const resumeResponse = Protocol.constructMessage(
                         Buffer.from([0x01, 0x02, 0x0c]),
