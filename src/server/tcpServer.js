@@ -195,7 +195,6 @@ class TcpServer {
                             this.deviceHeartbeats.set(deviceSN, Date.now());
                         }
                         const secondData = JSON.parse(message.data.toString());
-                        console.log(secondData);
                         if (secondData && secondData.SN) {
                             this.deviceManager.handleSecondData(secondData.SN, secondData);
                         }
@@ -206,8 +205,7 @@ class TcpServer {
 
                 case '010104': // setConfig
                     console.log(`${clientIP}:${clientPort} 04 setConfig`);
-                    const configData = JSON.parse(message.data.toString());
-                    console.log(configData);
+                    console.log(message.data.toString());
                     const setConfigResponse = Protocol.constructMessage(
                         Buffer.from([0x01, 0x02, 0x04]),
                         { Status: "Success" }
