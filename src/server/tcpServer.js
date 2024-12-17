@@ -20,7 +20,7 @@ class TcpServer {
             const clientPort = socket.remotePort;
             // 增加连接计数
             this.activeConnections++;
-            console.log(`New device connected from ${clientIP}:${clientPort}`);
+            console.log(`New device connected from [${clientIP}:${clientPort}]`);
             console.log(`Current active connections: ${this.activeConnections}`);
 
             
@@ -131,11 +131,11 @@ class TcpServer {
         try {
             switch (messageHeader) {
                 case '010100': // 心跳
-                    console.log(`${clientIP}:${clientPort} 00 heartbeat`);
+                    console.log(`[${new Date().toLocaleString()}] [${clientIP}:${clientPort}] 00 heartbeat`);
                     break;
 
                 case '010102': // 登录
-                    console.log(`${clientIP}:${clientPort} 02 login`);
+                    console.log(`[${new Date().toLocaleString()}] [${clientIP}:${clientPort}] 02 login`);
                     const loginData = JSON.parse(message.data.toString());
                     const newDeviceSN = loginData.UserName;
                     setDeviceSN(newDeviceSN);
@@ -167,7 +167,7 @@ class TcpServer {
                     break;
 
                 case '010103': // getConfig
-                    console.log(`${clientIP}:${clientPort} 03 getConfig`);
+                    console.log(`[${new Date().toLocaleString()}] [${clientIP}:${clientPort}] 03 getConfig`);
                     if (message.data) {
                         const dataResponse = Protocol.constructMessage(
                             Buffer.from([0x01, 0x02, 0x03]),
@@ -178,7 +178,7 @@ class TcpServer {
                     break;
 
                 case '010114': // getConfigExtend
-                    console.log(`${clientIP}:${clientPort} 14 getConfigExtend`);
+                    console.log(`[${new Date().toLocaleString()}] [${clientIP}:${clientPort}] 14 getConfigExtend`);
                     if (message.data) {
                         const dataResponse = Protocol.constructMessage(
                             Buffer.from([0x01, 0x02, 0x14]),
@@ -189,7 +189,7 @@ class TcpServer {
                     break;
 
                 case '010110': // 秒级数据
-                    console.log(`${clientIP}:${clientPort} 10 second data`);
+                    console.log(`[${new Date().toLocaleString()}] [${clientIP}:${clientPort}] 10 second data`);
                     try {
                         if (deviceSN) {
                             this.deviceHeartbeats.set(deviceSN, Date.now());
@@ -204,7 +204,7 @@ class TcpServer {
                     break;
 
                 case '010104': // setConfig
-                    console.log(`${clientIP}:${clientPort} 04 setConfig`);
+                    console.log(`[${new Date().toLocaleString()}] [${clientIP}:${clientPort}] 04 setConfig`);
                     console.log(message.data.toString());
                     const setConfigResponse = Protocol.constructMessage(
                         Buffer.from([0x01, 0x02, 0x04]),
@@ -214,7 +214,7 @@ class TcpServer {
                     break;
 
                 case '010115': // setConfigExtend
-                    console.log(`${clientIP}:${clientPort} 15 setConfigExtend`);
+                    console.log(`[${new Date().toLocaleString()}] [${clientIP}:${clientPort}] 15 setConfigExtend`);
                     const setConfigExtendResponse = Protocol.constructMessage(
                         Buffer.from([0x01, 0x02, 0x15]),
                         { Status: "Success" }
@@ -223,7 +223,7 @@ class TcpServer {
                     break;
 
                 case '01010f': // 故障解析
-                    console.log(`${clientIP}:${clientPort} 0f fault`);
+                    console.log(`[${new Date().toLocaleString()}] [${clientIP}:${clientPort}] 0f fault`);
                     const faultResponse = Protocol.constructMessage(
                         Buffer.from([0x01, 0x02, 0x0f]),
                         { Status: "Success" }
@@ -231,10 +231,10 @@ class TcpServer {
                     socket.write(faultResponse);
                     break;
                 case '010208':
-                    console.log(`${clientIP}:${clientPort} 08 reply ems command`);
+                    console.log(`[${new Date().toLocaleString()}] [${clientIP}:${clientPort}] 08 reply ems command`);
                     break;
                 case '010109':
-                    console.log(`${clientIP}:${clientPort} 09 info`);
+                    console.log(`[${new Date().toLocaleString()}] [${clientIP}:${clientPort}] 09 info`);
                     const infoResponse = Protocol.constructMessage(
                         Buffer.from([0x01, 0x02, 0x09]),
                         { Status: "Success" }
@@ -242,7 +242,7 @@ class TcpServer {
                     socket.write(infoResponse);
                     break;
                 case '01010c': // Resume Data
-                    console.log(`${clientIP}:${clientPort} 0c resume data`);
+                    console.log(`[${new Date().toLocaleString()}] [${clientIP}:${clientPort}] 0c resume data`);
                     const csvData = message.data.toString();
                     const resumeResponse = Protocol.constructMessage(
                         Buffer.from([0x01, 0x02, 0x0c]),
