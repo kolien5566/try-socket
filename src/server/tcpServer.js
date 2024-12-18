@@ -1,6 +1,16 @@
 const net = require('net');
 const Protocol = require('./protocol');
 
+function formatDate(date) {
+    return date.getFullYear() + '-' +
+           String(date.getMonth() + 1).padStart(2, '0') + '-' +
+           String(date.getDate()).padStart(2, '0') + ' ' +
+           String(date.getHours()).padStart(2, '0') + ':' +
+           String(date.getMinutes()).padStart(2, '0') + ':' +
+           String(date.getSeconds()).padStart(2, '0') + '.' +
+           String(date.getMilliseconds()).padStart(3, '0');
+}
+
 class TcpServer {
     constructor(deviceManager) {
         this.server = net.createServer();
@@ -48,7 +58,7 @@ class TcpServer {
                         heartbeatTimer = timer;
                     }, clientIP, clientPort);
                 } else {
-                    console.error('Not Parsed!');
+                    console.error(`[${formatDate(new Date())}] Not Parsed!`);
                     console.log(data);
                 }
             });
@@ -131,11 +141,11 @@ class TcpServer {
         try {
             switch (messageHeader) {
                 case '010100': // 心跳
-                    console.log(`[${new Date().toLocaleString()}] [${clientIP}:${clientPort}] 00 heartbeat`);
+                    console.log(`[${formatDate(new Date())}] [${clientIP}:${clientPort}] 00 heartbeat`);
                     break;
 
                 case '010102': // 登录
-                    console.log(`[${new Date().toLocaleString()}] [${clientIP}:${clientPort}] 02 login`);
+                    console.log(`[${formatDate(new Date())}] [${clientIP}:${clientPort}] 02 login`);
                     const loginData = JSON.parse(message.data.toString());
                     const newDeviceSN = loginData.UserName;
                     setDeviceSN(newDeviceSN);
@@ -167,7 +177,7 @@ class TcpServer {
                     break;
 
                 case '010103': // getConfig
-                    console.log(`[${new Date().toLocaleString()}] [${clientIP}:${clientPort}] 03 getConfig`);
+                    console.log(`[${formatDate(new Date())}] [${clientIP}:${clientPort}] 03 getConfig`);
                     if (message.data) {
                         const dataResponse = Protocol.constructMessage(
                             Buffer.from([0x01, 0x02, 0x03]),
@@ -178,7 +188,7 @@ class TcpServer {
                     break;
 
                 case '010114': // getConfigExtend
-                    console.log(`[${new Date().toLocaleString()}] [${clientIP}:${clientPort}] 14 getConfigExtend`);
+                    console.log(`[${formatDate(new Date())}] [${clientIP}:${clientPort}] 14 getConfigExtend`);
                     if (message.data) {
                         const dataResponse = Protocol.constructMessage(
                             Buffer.from([0x01, 0x02, 0x14]),
@@ -189,7 +199,7 @@ class TcpServer {
                     break;
 
                 case '010110': // 秒级数据
-                    console.log(`[${new Date().toLocaleString()}] [${clientIP}:${clientPort}] 10 second data`);
+                    console.log(`[${formatDate(new Date())}] [${clientIP}:${clientPort}] 10 second data`);
                     try {
                         if (deviceSN) {
                             this.deviceHeartbeats.set(deviceSN, Date.now());
@@ -204,7 +214,7 @@ class TcpServer {
                     break;
 
                 case '010104': // setConfig
-                    console.log(`[${new Date().toLocaleString()}] [${clientIP}:${clientPort}] 04 setConfig`);
+                    console.log(`[${formatDate(new Date())}] [${clientIP}:${clientPort}] 04 setConfig`);
                     console.log(message.data.toString());
                     const setConfigResponse = Protocol.constructMessage(
                         Buffer.from([0x01, 0x02, 0x04]),
@@ -214,7 +224,7 @@ class TcpServer {
                     break;
 
                 case '010115': // setConfigExtend
-                    console.log(`[${new Date().toLocaleString()}] [${clientIP}:${clientPort}] 15 setConfigExtend`);
+                    console.log(`[${formatDate(new Date())}] [${clientIP}:${clientPort}] 15 setConfigExtend`);
                     const setConfigExtendResponse = Protocol.constructMessage(
                         Buffer.from([0x01, 0x02, 0x15]),
                         { Status: "Success" }
@@ -223,7 +233,7 @@ class TcpServer {
                     break;
 
                 case '01010f': // 故障解析
-                    console.log(`[${new Date().toLocaleString()}] [${clientIP}:${clientPort}] 0f fault`);
+                    console.log(`[${formatDate(new Date())}] [${clientIP}:${clientPort}] 0f fault`);
                     const faultResponse = Protocol.constructMessage(
                         Buffer.from([0x01, 0x02, 0x0f]),
                         { Status: "Success" }
@@ -231,10 +241,10 @@ class TcpServer {
                     socket.write(faultResponse);
                     break;
                 case '010208':
-                    console.log(`[${new Date().toLocaleString()}] [${clientIP}:${clientPort}] 08 reply ems command`);
+                    console.log(`[${formatDate(new Date())}] [${clientIP}:${clientPort}] 08 reply ems command`);
                     break;
                 case '010109':
-                    console.log(`[${new Date().toLocaleString()}] [${clientIP}:${clientPort}] 09 info`);
+                    console.log(`[${formatDate(new Date())}] [${clientIP}:${clientPort}] 09 info`);
                     const infoResponse = Protocol.constructMessage(
                         Buffer.from([0x01, 0x02, 0x09]),
                         { Status: "Success" }
@@ -242,7 +252,7 @@ class TcpServer {
                     socket.write(infoResponse);
                     break;
                 case '01010c': // Resume Data
-                    console.log(`[${new Date().toLocaleString()}] [${clientIP}:${clientPort}] 0c resume data`);
+                    console.log(`[${formatDate(new Date())}] [${clientIP}:${clientPort}] 0c resume data`);
                     const csvData = message.data.toString();
                     const resumeResponse = Protocol.constructMessage(
                         Buffer.from([0x01, 0x02, 0x0c]),
