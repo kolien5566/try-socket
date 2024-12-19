@@ -25,7 +25,6 @@ class TcpServer {
 
     start(port) {
         this.server.on('connection', (socket) => {
-
             const clientIP = socket.remoteAddress;
             const clientPort = socket.remotePort;
             // 增加连接计数
@@ -46,6 +45,8 @@ class TcpServer {
             let heartbeatTimer = null;
 
             socket.on('data', async (data) => {
+                console.log(data);
+                console.log(data.length);
                 const message = Protocol.parseMessage(data);
                 if (message != null) {
                     await this.handleMessage(socket, message, deviceSN, heartbeatTimer, (sn) => {
@@ -59,7 +60,6 @@ class TcpServer {
                     }, clientIP, clientPort);
                 } else {
                     console.error(`[${formatDate(new Date())}] Not Parsed!`);
-                    console.log(data);
                 }
             });
 
@@ -135,9 +135,6 @@ class TcpServer {
 
     async handleMessage(socket, message, deviceSN, heartbeatTimer, setDeviceSN, setHeartbeatTimer, clientIP, clientPort) {
         const messageHeader = message.header.toString('hex');
-        if(message.data) {
-            console.log(message.data.length);
-        }
         try {
             switch (messageHeader) {
                 case '010100': // 心跳
@@ -215,7 +212,6 @@ class TcpServer {
 
                 case '010104': // setConfig
                     console.log(`[${formatDate(new Date())}] [${clientIP}:${clientPort}] 04 setConfig`);
-                    console.log(message.data.toString());
                     const setConfigResponse = Protocol.constructMessage(
                         Buffer.from([0x01, 0x02, 0x04]),
                         { Status: "Success" }
